@@ -1,25 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<head> <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDSdm7EYuqYchdh75U0RykKeuiUOI3JX0",
-    authDomain: "contentflow-organizador-pro.firebaseapp.com",
-    databaseURL: "https://contentflow-organizador-pro-default-rtdb.firebaseio.com",
-    projectId: "contentflow-organizador-pro",
-    storageBucket: "contentflow-organizador-pro.firebasestorage.app",
-    messagingSenderId: "477915730665",
-    appId: "1:477915730665:web:ee56b4aa136729dde31678"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.fbDB = getDatabase(app);
-  window.fbRef = ref;
-  window.fbSet = set;
-  window.fbOnValue = onValue;
-</script> 
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContentFlow Organizador Pro v6</title>
