@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -358,6 +353,36 @@ box-shadow:none}
     to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+
+<!-- Firebase Realtime Database -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSdm7EYuqYchdh75U0RykKeuiUOI3JX0",
+    authDomain: "contentflow-organizador-pro.firebaseapp.com",
+    databaseURL: "https://contentflow-organizador-pro-default-rtdb.firebaseio.com",
+    projectId: "contentflow-organizador-pro",
+    storageBucket: "contentflow-organizador-pro.firebasestorage.app",
+    messagingSenderId: "477915730665",
+    appId: "1:477915730665:web:ee56b4aa136729dde31678"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  
+  window.fbDB = db;
+  window.fbRef = ref;
+  window.fbSet = set;
+  window.fbOnValue = onValue;
+  
+  // Cargar datos al iniciar
+  window.addEventListener('DOMContentLoaded', () => {
+    if (typeof loadStateFirebase === 'function') loadStateFirebase();
+  });
+</script>
 
 </head>
 <body>
@@ -1279,5 +1304,51 @@ function renderizarGraficoActividad() {
 document.addEventListener('DOMContentLoaded', inicializarActividad);
 </script>
 
+<script type="module">
+
+// ===== FIREBASE SYNC =====
+const FB_USER_ID = "default";
+
+async function saveStateFirebase() {
+  if (!window.fbDB) return;
+  const dbRef = window.fbRef(window.fbDB, 'usuarios/' + FB_USER_ID);
+  try {
+    await window.fbSet(dbRef, {
+      state: state,
+      analytics: analytics,
+      updated: Date.now()
+    });
+  } catch (e) {
+    console.error('Error guardando en Firebase:', e);
+  }
+}
+
+function loadStateFirebase() {
+  if (!window.fbDB) return;
+  const dbRef = window.fbRef(window.fbDB, 'usuarios/' + FB_USER_ID);
+  window.fbOnValue(dbRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      if (data.state) state = data.state;
+      if (data.analytics) analytics = data.analytics;
+      render();
+      if (typeof renderAnalytics === 'function') renderAnalytics();
+    }
+  });
+}
+
+// Reemplazar saveState original
+const originalSaveState = window.saveState;
+window.saveState = function() {
+  if (typeof originalSaveState === 'function') originalSaveState();
+  saveStateFirebase();
+};
+
+// Cargar al inicio si no hay datos locales
+if (!localStorage.getItem('contentflow_state')) {
+  loadStateFirebase();
+}
+
+</script>
 </body>
-</html> 
+</html>
