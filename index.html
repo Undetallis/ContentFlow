@@ -356,15 +356,13 @@ box-shadow:none}
 
 
 <!-- Firebase Realtime Database -->
-<script type="module">
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+<<script type="module">
+// Importar los módulos oficiales de Firebase desde la CDN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 1. CONFIGURACIÓN DE TU PROYECTO FIREBASE
+// Reemplaza estos valores ficticios por tus credenciales reales de la consola de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDSdm7EYuqyYchdh75U0RykKeuiUOI3JX0",
   authDomain: "contentflow-organizador-pro.firebaseapp.com",
@@ -376,14 +374,69 @@ const firebaseConfig = {
   measurementId: "G-S22J5ZTLZP"
 };
 
-// Initialize Firebase
+// 2. INICIALIZACIÓN
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const db = getDatabase(app);
+
+// ===== FIREBASE SYNC =====
+const FB_USER_ID = "default";
+
+// Definimos las funciones directamente con los módulos importados
+async function saveStateFirebase() {
+  if (!db) return;
+  const dbRef = ref(db, 'usuarios/' + FB_USER_ID);
+  try {
+    await set(dbRef, {
+      state: state,
+      analytics: analytics,
+      updated: Date.now()
+    });
+    console.log('✅ Estado sincronizado en Firebase correctamente.');
+  } catch (e) {
+    console.error('❌ Error guardando en Firebase:', e);
+  }
+}
+
+function loadStateFirebase() {
+  if (!db) return;
+  const dbRef = ref(db, 'usuarios/' + FB_USER_ID);
   
-  // Cargar datos al iniciar
-  window.addEventListener('DOMContentLoaded', () => {
-    if (typeof loadStateFirebase === 'function') loadStateFirebase();
+  onValue(dbRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log('📖 Datos obtenidos de Firebase:', data);
+      
+      // Asignamos los datos que vienen de la nube a tus variables locales de ContentFlow
+      if (data.state) state = data.state;
+      if (data.analytics) analytics = data.analytics;
+      
+      // Volvemos a renderizar tu interfaz con los datos reales
+      render();
+      if (typeof renderAnalytics === 'function') renderAnalytics();
+    } else {
+      console.warn('⚠️ No se encontraron datos para este usuario. Inicializando base de datos...');
+      // Opcional: Puedes forzar un primer guardado si la base de datos está vacía (null)
+      saveStateFirebase();
+    }
+  }, (error) => {
+    console.error("❌ Error en la escucha de Firebase:", error);
   });
+}
+
+// Reemplazar tu función saveState original para que use Firebase
+const originalSaveState = window.saveState;
+window.saveState = function() {
+  // Primero ejecuta tu guardado local original (localStorage) si existía
+  if (typeof originalSaveState === 'function') originalSaveState();
+  
+  // Luego sube los datos actualizados a Firebase automáticamente
+  saveStateFirebase();
+};
+
+// Inicializar la carga de datos de Firebase cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+  loadStateFirebase();
+});
 </script>
 
 </head>
